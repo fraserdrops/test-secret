@@ -1,0 +1,6 @@
+name: Secret scope test
+on: workflow_dispatch
+jobs:
+  call-reusable:
+    uses: ./.github/workflows/reusable.yml
+    secrets: inherit

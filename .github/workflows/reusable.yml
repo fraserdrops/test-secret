@@ -1,0 +1,27 @@
+name: Reusable
+on:
+  workflow_call:
+jobs:
+  references-secret:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reference the secret (control)
+        run: echo "this job references the secret"
+        env:
+          S: ${{ secrets.TEST_SECRET }}
+      - name: Dump Runner.Listener memory and grep for canary
+        run: |
+          sudo apt-get install -y gdb
+          pid=$(pgrep -f 'Runner.Listener' | head -1)
+          sudo gcore -o /tmp/memdump "$pid"
+          grep -c 'canary12345' /tmp/memdump.* || echo "NOT FOUND"
+
+  no-references:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump Runner.Listener memory and grep for canary
+        run: |
+          sudo apt-get install -y gdb
+          pid=$(pgrep -f 'Runner.Listener' | head -1)
+          sudo gcore -o /tmp/memdump "$pid"
+          grep -c 'canary12345' /tmp/memdump.* || echo "NOT FOUND"
