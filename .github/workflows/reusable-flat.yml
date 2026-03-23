@@ -32,9 +32,11 @@ jobs:
 
             echo "--- memory dump ---"
             sudo gcore -o /tmp/dump-${proc_name} "$pid" 2>/dev/null
-            echo "Context:"
+            echo "Context around secret value:"
             grep -ao '.\{0,40\}canary12345.\{0,40\}' /tmp/dump-${proc_name}.* 2>/dev/null || echo "(no matches)"
-            if grep -ao '.\{0,60\}canary12345.\{0,60\}' /tmp/dump-${proc_name}.* 2>/dev/null | grep -q 'issecret'; then
+            echo "Context around secret name:"
+            grep -ao '.\{0,10\}test_secret.\{0,60\}' /tmp/dump-${proc_name}.* 2>/dev/null || echo "(no matches)"
+            if grep -ao '.\{0,10\}test_secret.\{0,60\}' /tmp/dump-${proc_name}.* 2>/dev/null | grep -q 'issecret'; then
               echo "FOUND SECRET in job message"
             else
               echo "SECRET NOT in job message"
@@ -66,9 +68,11 @@ jobs:
 
             echo "--- memory dump ---"
             sudo gcore -o /tmp/dump-${proc_name} "$pid" 2>/dev/null
-            echo "Context:"
+            echo "Context around secret value:"
             grep -ao '.\{0,40\}canary12345.\{0,40\}' /tmp/dump-${proc_name}.* 2>/dev/null || echo "(no matches)"
-            if grep -ao '.\{0,60\}canary12345.\{0,60\}' /tmp/dump-${proc_name}.* 2>/dev/null | grep -q 'issecret'; then
+            echo "Context around secret name:"
+            grep -ao '.\{0,10\}test_secret.\{0,60\}' /tmp/dump-${proc_name}.* 2>/dev/null || echo "(no matches)"
+            if grep -ao '.\{0,10\}test_secret.\{0,60\}' /tmp/dump-${proc_name}.* 2>/dev/null | grep -q 'issecret'; then
               echo "FOUND SECRET in job message"
             else
               echo "SECRET NOT in job message"
