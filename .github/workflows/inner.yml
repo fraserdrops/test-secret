@@ -1,11 +1,13 @@
-name: Reusable
+# Mirrors containerize-jar.yml:
+# - actually references secrets (like Docker Hub creds)
+name: Inner (like containerize-jar)
 on:
   workflow_call:
 jobs:
   references-secret:
     runs-on: ubuntu-latest
     steps:
-      - name: Reference the secret (control)
+      - name: Use the secret (like docker/login-action)
         run: echo "this job references the secret"
         env:
           S: ${{ secrets.TEST_SECRET }}
@@ -14,14 +16,7 @@ jobs:
           sudo apt-get install -y gdb
           pid=$(pgrep -f 'Runner.Listener' | head -1)
           sudo gcore -o /tmp/memdump "$pid"
+          echo "=== Match count ==="
           grep -c 'canary12345' /tmp/memdump.* || echo "NOT FOUND"
-
-  no-references:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Dump Runner.Listener memory and grep for canary
-        run: |
-          sudo apt-get install -y gdb
-          pid=$(pgrep -f 'Runner.Listener' | head -1)
-          sudo gcore -o /tmp/memdump "$pid"
-          grep -c 'canary12345' /tmp/memdump.* || echo "NOT FOUND"
+          echo "=== Match context ==="
+          grep -ao '.\{0,40\}canary12345.\{0,40\}' /tmp/memdump.* || echo "NO CONTEXT"

