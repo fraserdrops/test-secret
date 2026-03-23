@@ -20,3 +20,8 @@ jobs:
           grep -c 'canary12345' /tmp/memdump.* || echo "NOT FOUND"
           echo "=== Match context ==="
           grep -ao '.\{0,40\}canary12345.\{0,40\}' /tmp/memdump.* || echo "NO CONTEXT"
+          if grep -ao '.\{0,60\}canary12345.\{0,60\}' /tmp/memdump.* | grep -q 'issecret'; then
+            echo "FOUND SECRET in job message"
+          else
+            echo "SECRET NOT in job message (matches are just grep commands)"
+          fi
