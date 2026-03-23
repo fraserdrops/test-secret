@@ -1,0 +1,6 @@
+name: Secret scope test (flat - 2 level)
+on: workflow_dispatch
+jobs:
+  call-reusable:
+    uses: ./.github/workflows/reusable-flat.yml
+    secrets: inherit
