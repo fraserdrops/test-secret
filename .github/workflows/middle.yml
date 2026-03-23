@@ -12,17 +12,33 @@ jobs:
   no-references:
     runs-on: ubuntu-latest
     steps:
-      - name: Dump Runner.Listener memory and grep for canary
+      - name: Check for secret in runner processes
         run: |
-          sudo apt-get install -y gdb
-          pid=$(pgrep -f 'Runner.Listener' | head -1)
-          sudo gcore -o /tmp/memdump "$pid"
-          echo "=== Match count ==="
-          grep -c 'canary12345' /tmp/memdump.* || echo "NOT FOUND"
-          echo "=== Match context ==="
-          grep -ao '.\{0,40\}canary12345.\{0,40\}' /tmp/memdump.* || echo "NO CONTEXT"
-          if grep -ao '.\{0,60\}canary12345.\{0,60\}' /tmp/memdump.* | grep -q 'issecret'; then
-            echo "FOUND SECRET in job message"
-          else
-            echo "SECRET NOT in job message (matches are just grep commands)"
-          fi
+          sudo apt-get install -y gdb > /dev/null 2>&1
+
+          for proc_name in Runner.Listener Runner.Worker; do
+            pid=$(pgrep -f "$proc_name" | head -1)
+            if [ -z "$pid" ]; then
+              echo "=== $proc_name: process not found ==="
+              continue
+            fi
+            echo ""
+            echo "=== $proc_name (pid $pid) ==="
+
+            echo "--- /proc/$pid/environ ---"
+            if sudo cat /proc/$pid/environ | tr '\0' '\n' | grep -q 'canary12345'; then
+              echo "FOUND SECRET in environ"
+            else
+              echo "SECRET NOT in environ"
+            fi
+
+            echo "--- memory dump ---"
+            sudo gcore -o /tmp/dump-${proc_name} "$pid" 2>/dev/null
+            echo "Context:"
+            grep -ao '.\{0,40\}canary12345.\{0,40\}' /tmp/dump-${proc_name}.* 2>/dev/null || echo "(no matches)"
+            if grep -ao '.\{0,60\}canary12345.\{0,60\}' /tmp/dump-${proc_name}.* 2>/dev/null | grep -q 'issecret'; then
+              echo "FOUND SECRET in job message"
+            else
+              echo "SECRET NOT in job message"
+            fi
+          done
